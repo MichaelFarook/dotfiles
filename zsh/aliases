@@ -1,0 +1,38 @@
+# My Aliases
+alias ls='ls --color=auto'
+alias ll='ls -lah'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Global aliases
+alias v='nvim'
+alias ..='cd ..'
+
+# Git aliases
+alias ga='git add'
+alias gc='git commit -m'
+alias gp='git pull'
+
+# Kubectl aliases
+alias k='kubectl'
+alias kd='kubectl describe'
+alias kg='kubectl get'
+alias kgp='kubectl get pod'
+alias kgall='kubectl get all'
+alias kdp='kubectl describe pod'
+alias kgs='kubectl get service'
+alias kgd='kubectl get deployments'
+alias ks='kubectl config set-context --current --namespace'
+
+# Client-specific aliases (AWS profiles, cluster contexts, etc.) live in the
+# untracked, git-ignored zsh/aliases.local. Present only where created, so no
+# secrets travel with the repository.
+[ -f "$DOTFILES/zsh/aliases.local" ] && source "$DOTFILES/zsh/aliases.local"
+
+alias openvpn='openvpn3 session-start --config "client.conf"'
+alias spull='git checkout staging && git pull'
+
+export PATH="$HOME/snap/tenv/current/.tenv/bin:$PATH"
+
+alias d='dirs -v'
+for index ({1..9}) alias "$index"="cd +${index}"; unset index

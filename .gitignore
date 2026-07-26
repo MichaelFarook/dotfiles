@@ -1,0 +1,7 @@
+# Local secrets — never commit
+secrets.zsh
+zsh/secrets.zsh
+*.local
+
+# Internal audit notes — keep local, do not publish
+VALIDATION_REPORT.md
