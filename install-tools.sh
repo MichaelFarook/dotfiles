@@ -266,15 +266,18 @@ https://packages.openvpn.net/openvpn3/debian $codename main" \
 fi
 
 # ----------------------------------------------------------------------------
-log "Alacritty (verify manually)"
+log "Alacritty (installed by install-dependencies.sh)"
 # ----------------------------------------------------------------------------
-# Alacritty 0.17 is newer than most apt/PPA builds. Install via one of:
-#   - cargo:  rustup + 'cargo install alacritty' (build from source)
-#   - snap:   sudo snap install alacritty --classic   (community build)
-#   - release: https://github.com/alacritty/alacritty/releases
-# Left manual on purpose so you choose the source that matches 0.17.x.
-if have alacritty; then skip "alacritty"; else
-    echo "    SKIPPED — install Alacritty manually (see comment above)."
+# Alacritty is a dotfiles dependency and is installed from the classic snap by
+# install-dependencies.sh. This block only verifies the result.
+if have alacritty; then
+    skip "alacritty"
+elif (( LIST_ONLY )); then
+    printf '    would install: alacritty (via install-dependencies.sh)\n'
+else
+    FAILED+=("alacritty — snapd may be unavailable; see install-dependencies.sh")
+    echo "    MISSING — run install-dependencies.sh, or install a release binary"
+    echo "    from https://github.com/alacritty/alacritty/releases"
 fi
 
 # ----------------------------------------------------------------------------

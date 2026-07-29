@@ -19,7 +19,7 @@ chmod +x bootstrap.sh && ./bootstrap.sh --with-tools
 
 `bootstrap.sh` runs the whole setup in order:
 
-1. `install-dependencies.sh` — packages the dotfiles need (zsh, neovim, tmux, git, curl, xclip/xsel, zsh-syntax-highlighting, and fzf from Git).
+1. `install-dependencies.sh` — packages the dotfiles need (zsh, neovim, tmux, git, curl, xclip/xsel, zsh-syntax-highlighting, Alacritty from the classic snap, and fzf from Git).
 2. `install-tools.sh` — the DevOps toolchain (Terraform/Terragrunt via `tenv`, the AWS/Azure/GCP CLIs, Docker, kubectl, Helm, eksctl, Argo CD, Go, Node via `nvm`, and more). Included only with `--with-tools`.
 3. `install.sh` — symlinks the configs into `~/.config`, installs vim-plug and the Neovim plugins, and installs TPM and the tmux plugins.
 4. Sets zsh as the default login shell.
@@ -40,7 +40,7 @@ The following steps are not scripted and remain manual:
 - **Re-login:** log out and back in (or reboot) so the default-shell change and the `docker` group take effect.
 - **Client aliases:** recreate machine-local aliases in `~/.config/zsh/aliases.local` (AWS profiles, cluster contexts, role ARNs). This file is never committed — see Customization.
 - **Cloud authentication:** `aws configure`, `az login`, `gcloud init` as needed.
-- **Alacritty:** not installed by the scripts, because its current version is newer than typical packages. Install it separately (cargo, snap, or a release binary).
+- **Alacritty:** installed by `install-dependencies.sh` from the classic snap (`sudo snap install alacritty --classic`), because the 0.17.x series the config targets is newer than the apt and PPA builds. On a machine without `snapd`, the script prints a warning and you install a release binary manually.
 
 If the tmux or Neovim plugins did not install automatically (for example, if the tools were absent at bootstrap time), install them manually:
 
@@ -103,4 +103,4 @@ If the tmux or Neovim plugins did not install automatically (for example, if the
 To add custom configurations without modifying tracked files:
 - **Neovim**: Create `~/.config/nvim/custom.vim` (will be auto-loaded)
 - **Zsh secrets**: Create `~/.config/zsh/secrets.zsh` for tokens, keys, and secret environment variables. It is untracked (see `.gitignore`) and is auto-sourced by `.zshrc`.
-- **Zsh client aliases**: Create `~/.config/zsh/aliases.local` for client-specific or machine-specific aliases (AWS profiles, cluster contexts, role ARNs). It is untracked (matched by `*.local` in `.gitignore`) and is auto-sourced by `zsh/aliases` when present. Keep all client infrastructure identifiers here — never in the tracked `zsh/aliases`.
+- **Zsh client aliases**: Create `~/.config/zsh/aliases.local` for client-specific or machine-specific aliases (AWS profiles, cluster contexts, role ARNs). It is untracked (matched by `*.local` in `.gitignore`) and is auto-sourced by `zsh/aliases` when present. `zsh/aliases` also sources `$DOTFILES/zsh/aliases.local`, the legacy location used by older machines, so either path works and both are loaded if both exist. Keep all client infrastructure identifiers here — never in the tracked `zsh/aliases`.

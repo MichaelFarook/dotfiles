@@ -20,4 +20,17 @@ export HISTSIZE=10000
 # Maximum events in history life
 export SAVEHIST=10000
 
-export DOTFILES="$HOME/dotfiles"
+# Derive the repository location from this file's own path rather than assuming
+# ~/dotfiles. ~/.zshenv is a symlink into the clone, so ${(%):-%N} resolved with
+# :A gives the real file and :h:h gives the repository root. This keeps a clone
+# at any path working; without it, completion.zsh, bd.zsh, scripts.sh, and
+# aliases.local all fail to load from a non-default location.
+if [ -z "${DOTFILES:-}" ]; then
+    _dotfiles_root="${${(%):-%N}:A:h:h}"
+    if [ -d "$_dotfiles_root/zsh" ]; then
+        export DOTFILES="$_dotfiles_root"
+    else
+        export DOTFILES="$HOME/dotfiles"
+    fi
+    unset _dotfiles_root
+fi

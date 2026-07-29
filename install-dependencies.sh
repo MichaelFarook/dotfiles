@@ -23,6 +23,20 @@ sudo apt install -y \
     xsel \
     zsh-syntax-highlighting
 
+# Alacritty — the config in alacritty/alacritty.toml targets 0.17.x, which is
+# newer than the apt/PPA builds, so install the classic snap. Kept here (not in
+# install-tools.sh) because the terminal is a dotfiles dependency, not part of
+# the optional DevOps toolchain.
+if command -v alacritty &> /dev/null; then
+    echo "alacritty already installed ($(alacritty --version 2>/dev/null || echo 'version unknown'))."
+elif command -v snap &> /dev/null; then
+    echo "Installing Alacritty from the classic snap..."
+    sudo snap install alacritty --classic
+else
+    echo "Warning: snapd is unavailable, so Alacritty was not installed."
+    echo "Install it manually from https://github.com/alacritty/alacritty/releases"
+fi
+
 # fzf — install from Git only. The apt package ships an old binary (0.29) whose
 # shell integration passes `--min-height 20+`, which that binary cannot parse,
 # breaking Ctrl-R history search ("not a valid integer: 20+").

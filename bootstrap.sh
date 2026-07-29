@@ -72,6 +72,8 @@ Final manual steps:
     docker group (if --with-tools was used) take effect.
   - Recreate machine-local client aliases in ~/.config/zsh/aliases.local
     (AWS profiles, cluster contexts, role ARNs — never committed).
+    zsh/aliases sources that path and $DOTFILES/zsh/aliases.local, so a
+    file in either location is picked up.
   - Authenticate cloud CLIs as needed: aws configure / az login / gcloud init.
 ============================================================
 EOF

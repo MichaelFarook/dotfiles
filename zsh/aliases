@@ -24,10 +24,17 @@ alias kgs='kubectl get service'
 alias kgd='kubectl get deployments'
 alias ks='kubectl config set-context --current --namespace'
 
-# Client-specific aliases (AWS profiles, cluster contexts, etc.) live in the
-# untracked, git-ignored zsh/aliases.local. Present only where created, so no
-# secrets travel with the repository.
-[ -f "$DOTFILES/zsh/aliases.local" ] && source "$DOTFILES/zsh/aliases.local"
+# Client-specific aliases (AWS profiles, cluster contexts, role ARNs) live in an
+# untracked, git-ignored aliases.local. Present only where created, so no client
+# identifiers travel with the repository.
+#
+# Both locations are honoured: $ZDOTDIR (~/.config/zsh) is the documented path
+# for a new machine, and $DOTFILES/zsh is where older machines keep it. Sourcing
+# both means neither layout silently loses its aliases.
+for _aliases_local in "$ZDOTDIR/aliases.local" "$DOTFILES/zsh/aliases.local"; do
+    [ -f "$_aliases_local" ] && source "$_aliases_local"
+done
+unset _aliases_local
 
 alias openvpn='openvpn3 session-start --config "client.conf"'
 alias spull='git checkout staging && git pull'
