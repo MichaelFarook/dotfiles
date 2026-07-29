@@ -89,18 +89,35 @@ fi
 # ----------------------------------------------------------------------------
 log "Node.js via nvm (Node ${NODE_VERSION}) + yarn via corepack"
 # ----------------------------------------------------------------------------
-if [ -d "$HOME/.config/nvm" ] || [ -d "$HOME/.nvm" ]; then
+# Test for nvm.sh, not the directory: the installer below runs `mkdir -p
+# "$NVM_DIR"` before curl, so a failed install still leaves the directory
+# behind and a re-run would report nvm as present while it is not.
+if [ -s "$HOME/.config/nvm/nvm.sh" ] || [ -s "$HOME/.nvm/nvm.sh" ]; then
     skip "nvm"
 else
     run "nvm" bash -c 'export NVM_DIR="$HOME/.config/nvm"; mkdir -p "$NVM_DIR"; \
         curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash'
 fi
 if (( ! LIST_ONLY )); then
-    export NVM_DIR="${NVM_DIR:-$HOME/.config/nvm}"
-    # shellcheck disable=SC1091
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-    if have nvm; then
-        run "node ${NODE_VERSION}" bash -c "nvm install ${NODE_VERSION} && corepack enable && corepack prepare yarn@stable --activate"
+    NVM_DIR="${NVM_DIR:-$HOME/.config/nvm}"
+    [ -s "$NVM_DIR/nvm.sh" ] || NVM_DIR="$HOME/.nvm"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        # nvm is a shell function, and shell functions are not inherited by
+        # child processes. Sourcing nvm.sh in this script and then calling
+        # `bash -c "nvm install ..."` failed with "nvm: command not found",
+        # because the child had neither the function nor nvm.sh. Source it
+        # inside the same child that uses it. `nvm alias default` is required
+        # so that node resolves in later interactive shells, which source
+        # nvm.sh but select no version by themselves.
+        run "node ${NODE_VERSION}" env NVM_DIR="$NVM_DIR" NODE_VERSION="$NODE_VERSION" bash -c '
+            . "$NVM_DIR/nvm.sh"
+            nvm install "$NODE_VERSION"
+            nvm alias default "$NODE_VERSION"
+            corepack enable
+            corepack prepare yarn@stable --activate'
+    else
+        FAILED+=("node ${NODE_VERSION} (nvm.sh absent — the nvm install did not complete)")
+        echo "    SKIPPED — nvm.sh not found under $NVM_DIR"
     fi
 fi
 # Note: the old laptop's 'yarn 0.32+git' was the Debian 'cmdtest' impostor, not
@@ -244,10 +261,25 @@ if have go; then skip "go"; else
 fi
 
 # ----------------------------------------------------------------------------
-log "pre-commit (pip, user install)"
+log "pre-commit (pipx, with a pip fallback)"
 # ----------------------------------------------------------------------------
-if have pre-commit; then skip "pre-commit"; else
-    run "pre-commit" python3 -m pip install --user pre-commit
+# Debian 12 and Ubuntu 23.04 and newer mark the system Python as externally
+# managed (PEP 668), so `python3 -m pip install --user` aborts with
+# "error: externally-managed-environment". pipx is the supported route for
+# Python CLI tools; pip --user remains the fallback on older releases.
+# Both install into ~/.local/bin, which zsh/.zshenv now puts on PATH.
+if have pre-commit; then
+    skip "pre-commit"
+else
+    if ! have pipx; then
+        run "pipx" sudo apt install -y pipx
+        hash -r 2>/dev/null || true
+    fi
+    if have pipx; then
+        run "pre-commit" pipx install pre-commit
+    else
+        run "pre-commit" python3 -m pip install --user pre-commit
+    fi
 fi
 
 # ----------------------------------------------------------------------------

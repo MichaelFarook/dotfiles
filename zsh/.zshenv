@@ -34,3 +34,16 @@ if [ -z "${DOTFILES:-}" ]; then
     fi
     unset _dotfiles_root
 fi
+
+# PATH additions. Ubuntu normally adds ~/.local/bin from ~/.profile, which zsh
+# never reads once ZDOTDIR is set above. Without this, user-level installs are
+# invisible: pipx and pre-commit (install-tools.sh), the Claude Code native
+# installer, and pip --user all target ~/.local/bin. /usr/local/go/bin is where
+# install-tools.sh unpacks the Go tarball.
+# typeset -U keeps the array free of duplicates when zsh is re-entered.
+typeset -U path
+for _p in "$HOME/.local/bin" /usr/local/go/bin; do
+    [ -d "$_p" ] && path=("$_p" $path)
+done
+unset _p
+export PATH

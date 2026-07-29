@@ -50,15 +50,28 @@ bash "$DOTFILES/install.sh"
 
 # 4. Make zsh the default login shell
 step "4/4  Setting default shell"
+# Compare against the login shell recorded in /etc/passwd, not $SHELL. $SHELL
+# reports only the shell of the process that invoked this script, so running
+# bootstrap from an interactive zsh made this branch claim success while every
+# new login — and every tmux pane, since tmux takes its default-shell from the
+# same source — still started bash.
 if (( SKIP_SHELL )); then
     echo "Skipped (--skip-shell)."
-elif [ "$(basename "${SHELL:-}")" = "zsh" ]; then
-    echo "Default shell is already zsh."
+elif ! zsh_path="$(command -v zsh)"; then
+    echo "zsh is not installed; cannot set it as the login shell." >&2
 else
-    zsh_path="$(command -v zsh)"
-    if grep -qx "$zsh_path" /etc/shells 2>/dev/null || echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null; then
-        chsh -s "$zsh_path" && echo "Default shell set to $zsh_path." \
-            || echo "Could not change shell automatically; run: chsh -s $zsh_path"
+    passwd_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+    if [ "$passwd_shell" = "$zsh_path" ]; then
+        echo "Login shell is already $zsh_path."
+    else
+        echo "Login shell is ${passwd_shell:-unknown}; changing it to $zsh_path."
+        grep -qxF "$zsh_path" /etc/shells 2>/dev/null \
+            || echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+        if chsh -s "$zsh_path"; then
+            echo "Login shell set to $zsh_path. A full logout is required."
+        else
+            echo "Could not change the shell automatically; run: chsh -s $zsh_path" >&2
+        fi
     fi
 fi
 
